@@ -12,8 +12,13 @@ brperform <- read.csv("C:/Users/Klaudyna/Desktop/Kittiwakes project/AT LAST, but
 
 brperform$year_factor = as.factor(brperform$year)
 
-brperform$laying_success_fac = as.factor(brperform$laying_success)
-brperform$laying_success_num = as.numeric(brperform$laying_success)
+brperform$laying_success_char = as.character(brperform$laying_success)
+
+brperform$laying_success_num = as.numeric(brperform$laying_success_char)
+
+brperform$max_gap_char = as.character(brperform$max_gap)
+brperform$max_gap_num = as.numeric(brperform$max_gap_char)
+
 View(brperform)
 
 ############################################################################################
@@ -23,18 +28,18 @@ View(brperform)
 ############################################################################################
 
 ggplot(data=brperform, 
-       aes(x=perc_50, y=laying_success))+ #laying success as factor is a mess when plotted, if transformed into numeric, it has weird values #update:done
+       aes(x=perc_50, y=laying_success_num))+
   geom_point()
 
 ### MODEL
 
-  model_lay_success <- glmer(laying_success ~ perc_50 + 
+  model_lay_success <- glmer(laying_success_num ~ perc_50 + 
                             (1|year_factor)+
                             (1|colony), 
                            
-                                data = brperform[brperform$perc_incub_first_visit <= 10 & 
+                                data = brperform[brperform$perc_incub_first_visit<=10 & 
                                        brperform$bonxies == 0 & 
-                                       brperform$max_gap <= 6,],
+                                       brperform$max_gap_num <= 6,],
                             
                             weights = mean_gap,
                            
@@ -44,23 +49,23 @@ ggplot(data=brperform,
 
 
 
-  model_lay_success1 <- glmer(laying_success ~ 1 + 
-                               (1|year_factor)+
-                               (1|colony), 
-                             
-                                  data = brperform[brperform$perc_incub_first_visit<=10 & 
-                                         brperform$bonxies == 0 &  
-                                         brperform$max_gap<=6,],
-                             
-                             weights = mean_gap,
-                             
-                             family = binomial
-                             )  
+  model_lay_success1 <- glmer(laying_success_num ~ 1 + 
+                                (1|year_factor)+
+                                (1|colony), 
+                              
+                              data = brperform[brperform$perc_incub_first_visit<=10 & 
+                                                 brperform$bonxies == 0 & 
+                                                 brperform$max_gap_num <= 6,],
+                              
+                              weights = mean_gap,
+                              
+                              family = binomial
+  )
  
   anova(model_lay_success, model_lay_success1)
   
   summary(model_lay_success)
- 
+  
   
 ### RESIDUALS
   
@@ -72,7 +77,7 @@ ggplot(data=brperform,
   
   plot((brperform[brperform$perc_incub_first_visit<=10 & 
                      brperform$bonxies == 0 &  
-                     brperform$max_gap<=6 &
+                     brperform$max_gap_num<=6 &
                      !is.na(brperform$mean_gap)&
                      !is.na(brperform$perc_50)
                                                ,]
@@ -87,7 +92,8 @@ ggplot(data=brperform,
   plot(pr_lay)  
   
   ggplot(brperform[brperform$perc_incub_first_visit <= 10 
-                   & brperform$max_gap <= 6,],
+                   & brperform$bonxies == 0 &  
+                    brperform$max_gap_num <= 6,],
          aes(x=perc_50, y=laying_success_num))+
     
     geom_point()+
