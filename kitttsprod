@@ -102,5 +102,4 @@ ggplot(data=brperform,
                 fill="yellow", alpha=0.3)+
     xlab("Median laying date")+
     ylab ("Laying success")+
-    ylim(0,170)+
     theme_bw((base_size = 12))
