@@ -23,7 +23,7 @@ View(brperform)
 ############################################################################################
 
 ggplot(data=brperform, 
-       aes(x=perc_50, y=laying_success))+ #laying success as factor is a mess when plotted, if transformed into numeric, it has weird values
+       aes(x=perc_50, y=laying_success))+ #laying success as factor is a mess when plotted, if transformed into numeric, it has weird values #update:done
   geom_point()
 
 ### MODEL
@@ -33,7 +33,7 @@ ggplot(data=brperform,
                             (1|colony), 
                            
                                 data = brperform[brperform$perc_incub_first_visit <= 10 & 
-                                       brperform$bonxies = 0 & 
+                                       brperform$bonxies == 0 & 
                                        brperform$max_gap <= 6,],
                             
                             weights = mean_gap,
@@ -49,7 +49,7 @@ ggplot(data=brperform,
                                (1|colony), 
                              
                                   data = brperform[brperform$perc_incub_first_visit<=10 & 
-                                         brperform$bonxies = 0 &  
+                                         brperform$bonxies == 0 &  
                                          brperform$max_gap<=6,],
                              
                              weights = mean_gap,
@@ -71,7 +71,7 @@ ggplot(data=brperform,
   res_lay <- resid(model_lay_success)
   
   plot((brperform[brperform$perc_incub_first_visit<=10 & 
-                     brperform$bonxies = 0 &  
+                     brperform$bonxies == 0 &  
                      brperform$max_gap<=6 &
                      !is.na(brperform$mean_gap)&
                      !is.na(brperform$perc_50)
