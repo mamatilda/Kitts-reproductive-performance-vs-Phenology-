@@ -1,0 +1,100 @@
+rm(list=ls())
+
+setwd("C:/Users/Klaudyna/Desktop/Kittiwakes project/AT LAST, but not least/2. Productivity")
+
+library(ggplot2)
+library(dplyr)
+library(gam)
+library(lme4)
+library(ggeffects)
+
+brperform <- read.csv("C:/Users/Klaudyna/Desktop/Kittiwakes project/AT LAST, but not least/2. Productivity/PRODUCTIVITY R.csv", sep=";")
+
+brperform$year_factor = as.factor(brperform$year)
+
+brperform$laying_success_fac = as.factor(brperform$laying_success)
+brperform$laying_success_num = as.numeric(brperform$laying_success)
+View(brperform)
+
+############################################################################################
+#       ~~~~~~~~~~~~~~~~
+#######| LAYING SUCCESS |#####################################################################
+#       ~~~~~~~~~~~~~~~~
+############################################################################################
+
+ggplot(data=brperform, 
+       aes(x=perc_50, y=laying_success))+ #laying success as factor is a mess when plotted, if transformed into numeric, it has weird values
+  geom_point()
+
+### MODEL
+
+  model_lay_success <- glmer(laying_success ~ perc_50 + 
+                            (1|year_factor)+
+                            (1|colony), 
+                           
+                                data = brperform[brperform$perc_incub_first_visit <= 10 & 
+                                       brperform$bonxies = 0 & 
+                                       brperform$max_gap <= 6,],
+                            
+                            weights = mean_gap,
+                           
+                           family = binomial
+                           )
+
+
+
+
+  model_lay_success1 <- glmer(laying_success ~ 1 + 
+                               (1|year_factor)+
+                               (1|colony), 
+                             
+                                  data = brperform[brperform$perc_incub_first_visit<=10 & 
+                                         brperform$bonxies = 0 &  
+                                         brperform$max_gap<=6,],
+                             
+                             weights = mean_gap,
+                             
+                             family = binomial
+                             )  
+ 
+  anova(model_lay_success, model_lay_success1)
+  
+  summary(model_lay_success)
+ 
+  
+### RESIDUALS
+  
+  #RES VS FITTED
+  plot(model_lay_success)
+  
+  #RES VS EXPLANATORY VAR
+  res_lay <- resid(model_lay_success)
+  
+  plot((brperform[brperform$perc_incub_first_visit<=10 & 
+                     brperform$bonxies = 0 &  
+                     brperform$max_gap<=6 &
+                     !is.na(brperform$mean_gap)&
+                     !is.na(brperform$perc_50)
+                                               ,]
+        $perc_50), res_lay,  
+       
+       ylab="Residuals (Laying success)",
+       xlab="Explanatory variable (Median laying date)")
+  
+  ### PREDICTIONS
+  
+  pr_lay <- ggpredict(model_lay_success, terms="perc_50")
+  plot(pr_lay)  
+  
+  ggplot(brperform[brperform$perc_incub_first_visit <= 10 
+                   & brperform$max_gap <= 6,],
+         aes(x=perc_50, y=laying_success_num))+
+    
+    geom_point()+
+    geom_line(data=pr_lay, aes(y=predicted, x=x))+
+    geom_ribbon(data=pr_lay, aes(ymin=conf.low, ymax= conf.high, x=x ), inherit.aes=FALSE,
+                fill="yellow", alpha=0.3)+
+    xlab("Median laying date")+
+    ylab ("Laying success")+
+    ylim(0,170)+
+    theme_bw((base_size = 12))
